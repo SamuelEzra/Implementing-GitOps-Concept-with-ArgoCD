@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-app
+  namespace: apps
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: hello-app
+
+  template:
+    metadata:
+      labels:
+        app: hello-app
+
+    spec:
+      containers:
+        - name: hello-app
+          image: hello-app:latest
+
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: ENV
+              valueFrom:
+                secretKeyRef:
+                  name: app-config
+                  key: ENV
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
